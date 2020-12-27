@@ -4,8 +4,8 @@ Created by Epic at 12/25/20
 import socket
 from threading import Thread
 from context import Context
-from states.takeoff import Takeoff
-from states.idle import IdleState
+
+from states import TakeoffState, IdleState, PatrolState
 
 
 class Drone:
@@ -20,10 +20,18 @@ class Drone:
         self.using_state_queue = True
         self.state_queue = []
 
-        self.states = {
-            "idle": IdleState(self),
-            "takeoff": Takeoff(self)
-        }
+        self._states = [
+            IdleState,
+            TakeoffState,
+            PatrolState
+        ]
+
+        self.states = {}
+        self.send("command")
+
+        for state in self._states:
+            self.states[state.name] = state(self)
+            print("Added state %s" % state.name)
 
     def send(self, data):
         print("> %s" % data)
@@ -37,17 +45,27 @@ class Drone:
             listener(context)
 
     def exit_state(self):
+        if not self.using_state_queue:
+            raise TypeError("State queue isn't active!")
         print("State exited!")
         self.state.on_deactivate()
         try:
-            self.state = self.states[self.state_queue.pop()]
+            self.state = self.state_queue.pop()
         except IndexError:
             self.state = self.states["idle"]
+        print("New state: %s" % self.state.name)
         self.state.on_activate()
-        print("New state: %s" % self.state)
 
     def change_state(self, new_state):
+        self.using_state_queue = False
         self.state.on_deactivate()
-        print("Changed state: %s to %s" % (self.state, new_state))
+        print("Changed state: %s to %s" % (self.state.name, new_state.name))
         self.state = self.states[new_state]
         self.state.on_activate()
+
+    def queue_state(self, new_state):
+        if not self.using_state_queue:
+            raise TypeError("State queue isn't active!")
+        self.state_queue.append(self.states[new_state])
+        if self.state.name == "idle":
+            self.exit_state()

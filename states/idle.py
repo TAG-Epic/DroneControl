@@ -5,4 +5,5 @@ from .base import BaseState
 
 
 class IdleState(BaseState):
+    name = "idle"
     pass
