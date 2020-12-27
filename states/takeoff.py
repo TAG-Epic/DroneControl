@@ -7,6 +7,6 @@ from .base import BaseState
 class TakeoffState(BaseState):
     name = "takeoff"
 
-    def on_activate(self):
-        self.drone.send("takeoff")
-        self.drone.exit_state()
+    async def on_activate(self):
+        await self.drone.send_confirmation("takeoff")
+        await self.drone.exit_state()

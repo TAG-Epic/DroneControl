@@ -1,6 +1,7 @@
 """
 Created by Epic at 12/25/20
 """
+from logging import getLogger
 
 
 class BaseState:
@@ -9,12 +10,13 @@ class BaseState:
     def __init__(self, drone):
         self.active = False
         self.drone = drone
+        self.logger = getLogger("dronecontrol.state.%s" % self.name)
 
-    def on_activate(self):
+    async def on_activate(self):
         pass
 
-    def on_deactivate(self):
+    async def on_deactivate(self):
         pass
 
-    def on_data(self, context):
+    async def on_data(self, context):
         pass
